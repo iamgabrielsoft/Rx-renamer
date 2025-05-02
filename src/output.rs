@@ -150,7 +150,7 @@ impl Printer {
 
     
     #[warn(unused_variables)]
-    fn string_diff(&self, original: &str, changed: &str, base_color: Style,  diff_color: Style) -> String {
+    fn string_diff(&self, original: &str, changed: &str, _base_color: Style,  diff_color: Style) -> String {
         let mut colored_string = String::new(); 
         let changedset = Changeset::new(original, changed, "");
 

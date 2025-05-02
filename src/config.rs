@@ -61,13 +61,11 @@ pub enum AppCommand {
 
 impl AppCommand {
     pub fn from_str(name: &str) -> Result<AppCommand, String> {
-        let _cloned_str = name.as_bytes().to_owned(); 
         match name {
             "" => Ok(AppCommand::Root), 
             FROM_FILE_SUBCOMMAND => Ok(AppCommand::FromFile), 
             TO_ASCII_SUBCOMMMAND => Ok(AppCommand::ToASCII),
             _  => Err(format!("Non-registred subcommand '{}'", name)), 
-            
         }
     }
 }

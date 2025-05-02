@@ -69,7 +69,7 @@ pub fn get_paths(mode: &RunMode) -> PathList {
 
 pub fn get_unique_filename(path: &Path, suffix: &str) -> PathBuf {
     let base_name = format!("{} {}", path.file_name().unwrap().to_string_lossy(), suffix); 
-    let mut unique_name = path.to_path_buf(); //convert this to an owned path by te package
+    let mut unique_name = path.to_path_buf(); //convert this to an owned path
     unique_name.set_file_name(&base_name); 
     
 
@@ -115,9 +115,6 @@ pub fn is_same_file(source: &Path, target:&Path) -> bool {
             source_metadata.len() == target_metadata.len()
             && source_metadata.modified().unwrap() == target_metadata.modified().unwrap()
     }
-
-    
-    source == target
 }
 
 

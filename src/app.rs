@@ -157,14 +157,3 @@ fn is_valid_string(os_str: &OsStr) -> Result<(), OsString> {
         None => Err(OsString::from("Value provided is  not a valid UTF-8 string")),
     }
 }
-
-
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    fn get_a_valid_string() {
-
-    }
-}

@@ -101,7 +101,9 @@ impl Renamer {
     }
 
 
-    //rename file if its exist 
+    /*
+        Rename file if it exist using this medthod
+    */
     fn rename(&self, operation: &Operation) -> Result<()> {
         let printer = &self.config.printer; 
         let colors = &printer.colors; 
