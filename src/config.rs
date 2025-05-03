@@ -15,7 +15,8 @@ pub struct Config {
     pub dump: bool, 
     pub run_mode: RunMode, 
     pub replace_mode:ReplaceMode, 
-    pub printer: Printer
+    pub printer: Printer, 
+    pub interactive: bool,
 }
 
 

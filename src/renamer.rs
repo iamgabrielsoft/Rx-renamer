@@ -4,6 +4,7 @@ use crate::config::{Config, ReplaceMode, RunMode};
 use crate::dumpfile::{ Operation, Operations, self};
 use crate::error::*;
 use crate::fileutils::{create_backup, get_paths, };
+use crate::interactive::InterativeMode;
 use crate::solver;
 use std::collections::HashMap;
 use std::fs;
@@ -17,21 +18,16 @@ pub type RenameMap = HashMap<PathBuf, PathBuf>;
 
 pub struct Renamer {
     config: Arc<Config>, 
+    interactive: Option<InterativeMode>,
 }
-
-
-
-/// renaming operation file
-
-
 
 impl Renamer {
     pub fn new(config: &Arc<Config>) -> Result<Renamer>{
         Ok(Renamer {
             config: config.clone(), 
-        })
+            interactive: None, //initialize interactive mode as None
+            })
     }
-
 
 /** process user input accordingly */
     pub fn process (&self) -> Result<Operations>{
@@ -192,14 +188,25 @@ impl Renamer {
                 value: Some(error_string)
             })
         }
+    }
 
+    pub fn new_with_interactive_mode(config: &Arc<Config>) -> Self {
+        Renamer {
+            config: config.clone(),
+            interactive: Some(InterativeMode::new()),
+        }
 
     }
-}
 
+    pub fn process_interactive(&self, operations: Vec<PathBuf, PathBuf>) -> Result<()> {
+        if self.config.interactive {
+            let filtered_operations =self.interactive.process_operations(operations)?;
+            self.batch_rename(operations)?;
+        }
+        else {
+            self.batch_rename(operations)?; 
+        }
 
-
-#[cfg(test)]
-mod test {
-
+        Ok(())
+    }
 }

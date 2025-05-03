@@ -28,6 +28,7 @@ mod output;
 mod fileutils;
 mod renamer;
 mod solver;
+mod interactive;
 
 
 
