@@ -42,18 +42,18 @@ fn main(){
     };
 
 
-    if !config.force {
-        let info = &config.printer.colors.info; 
-        config.printer.print(&format!("{}", info.paint("Testing the DRY-RUN")))
-    }
+    // if !config.force {
+    //     let info = &config.printer.colors.info; 
+    //     config.printer.print(&format!("{}", info.paint("Testing the DRY-RUN")))
+    // }
 
 
-    //configure renamer
+    // //configure renamer
 
-    if !config.force{
-        let info = &config.printer.colors.info; 
-        config.printer.print(&format!("{}", info.paint("DRY")))
-    }
+    // if !config.force{
+    //     let info = &config.printer.colors.info; 
+    //     config.printer.print(&format!("{}", info.paint("DRY")))
+    // }
 
 
     //CONFIGURE RENAMER 

@@ -30,7 +30,7 @@ impl Editor {
     }
   }
 
-  pub fn getEditor() -> Self {
+  pub fn get_editor() -> Self {
     if(cfg(target_os = "windows")) {
       Editor::NOTEPAD
     }
@@ -39,7 +39,7 @@ impl Editor {
     }
   }
 
-  pub fn editFile(&self, file_path: &PathBuf) -> Result<()> {
+  pub fn edit_file(&self, file_path: &PathBuf) -> Result<()> {
     match self {
       Editor::VIM => {
         Command::new("vim")
@@ -52,7 +52,13 @@ impl Editor {
       }
 
       Editor::NotePad => {
-
+        Command::new("notepad")
+          .arg(file_path)
+          .stdin(Stdio::inherit())
+          .stdout(Stdio::inherit())
+          .stderr(Stdio::inherit())
+          .spawn()?
+          .wait()
       }
     }
 
