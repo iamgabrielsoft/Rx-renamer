@@ -1,8 +1,10 @@
+use std::fs;
+use std::io::Write;
 use std::process::{ Command, Stdio }; 
 use std::path::PathBuf; 
 use anyhow::Result;
 use serde_derive::{Deserialize, Serialize};
-use tempfile::{tempfile, NamedTempFile};
+use tempfile::NamedTempFile;
 
 pub enum Editor {
   VIM, 
@@ -31,16 +33,16 @@ impl Editor {
   }
 
   pub fn get_editor() -> Self {
-    if(cfg(target_os = "windows")) {
+    #[cfg(target_os = "windows")] {
       Editor::NOTEPAD
     }
-    else {
+    #[cfg(not(target_os = "windows"))] {
       Editor::VIM
     }
   }
 
   pub fn edit_file(&self, file_path: &PathBuf) -> Result<()> {
-    match self {
+    let status = match self {
       Editor::VIM => {
         Command::new("vim")
           .arg(file_path)
@@ -48,21 +50,27 @@ impl Editor {
           .stdout(Stdio::inherit())
           .stderr(Stdio::inherit())
           .spawn()?
-          .wait()
+          .wait()?
       }
 
-      Editor::NotePad => {
+      Editor::NOTEPAD => {
         Command::new("notepad")
           .arg(file_path)
           .stdin(Stdio::inherit())
           .stdout(Stdio::inherit())
           .stderr(Stdio::inherit())
           .spawn()?
-          .wait()
+          .wait()?
       }
+    };
+
+    if status.success() {
+      Ok(())
+    }else {
+      anyhow::bail!("Failed to open editor {:?}", status)
     }
 
-    Ok(())
+   
   }
 }
 
@@ -70,38 +78,34 @@ impl Editor {
 impl InterativeMode {
   pub fn new() -> Self {
     InterativeMode {
-      editor: Editor::getEditor(),
+      editor: Editor::get_editor(),
     }
   }
 
-  pub fn process_operations(&self, operations: Vec<RenameOperation>) -> Result<()> {
-    let mut temp_file = NamedTempFile::new(); 
-    let mut operation_data = Vec::new();
+  pub fn process_operations(&self, operations: Vec<RenameOperation>) -> Result<Vec<RenameOperation>> {
+    let mut temp_file = NamedTempFile::new()?; 
+    let file_path = temp_file.path().to_path_buf();
 
-    for (old, new) in &operations {
-      operation_data.push(RenameOperation {
-        old_name: old.to_string_lossy().to_string(),
-        new_name: new.to_string_lossy().to_string(),
-        status: "pending".to_string(),
-      });
-    }
+    let json = serde_json::to_string_pretty(&operations)?;
+    temp_file.write_all(json.as_bytes())?;
+    temp_file.flush()?;
 
-    serde_json::to_writer_pretty(&temp_file, &operation_data)?;
+    self.editor.edit_file(&file_path)?;
 
-    self.editor.editFile(temp_file.path())?;
+    let modified_json = fs::read_to_string(file_path)?; 
+    let modified_operations = serde_json::from_str(&modified_json)?;
+
+    Ok(modified_operations)
+  }
 
 
-    let modified_data = serde_json::from_reader(temp_file.as_file())
-      .into_iter()
-      .filter(|op| op.status == "completed")
-      .map(|op| {
-        (
-          PathBuf::from(&op.old_name),
-          PathBuf::from(&op.new_name),
-        )
-      })
-      .collect();
+  pub fn apply_rename_operations(&self, operations: Vec<RenameOperation>) -> Result<()> {
+      for op in operations {
+        if op.status {
+          fs::rename(&op.old_name, op.new_name)?;
+        }
+      }
 
-    Ok(modified_data)
+    Ok(())
   }
 }

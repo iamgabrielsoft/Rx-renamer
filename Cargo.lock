@@ -27,6 +27,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1c2f61e4959c7ccd1bd26c13497471ec96a43ba8b7df3384b4cb6d92794f688"
 
 [[package]]
+name = "anyhow"
+version = "1.0.98"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -230,6 +236,7 @@ version = "0.1.0"
 dependencies = [
  "ansi_term",
  "any_ascii",
+ "anyhow",
  "atty",
  "chrono",
  "clap",

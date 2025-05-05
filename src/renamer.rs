@@ -198,15 +198,15 @@ impl Renamer {
 
     }
 
-    pub fn process_interactive(&self, operations: Vec<PathBuf, PathBuf>) -> Result<()> {
-        if self.config.interactive {
-            let filtered_operations =self.interactive.process_operations(operations)?;
-            self.batch_rename(operations)?;
-        }
-        else {
-            self.batch_rename(operations)?; 
-        }
+    // pub fn process_interactive(&self, operations: Vec<PathBuf, PathBuf>) -> Result<()> {
+    //     if self.config.interactive {
+    //         let filtered_operations =self.interactive.process_operations(operations)?;
+    //         self.batch_rename(operations)?;
+    //     }
+    //     else {
+    //         self.batch_rename(operations)?; 
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 }

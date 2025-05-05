@@ -1,5 +1,4 @@
 use std::sync::Arc;
-
 use clap::ArgMatches;
 use regex::Regex;
 
@@ -49,9 +48,6 @@ pub enum ReplaceMode {
 }
 
 
-
-
-
 #[derive(PartialEq, Debug)]
 pub enum AppCommand {
     Root,
@@ -70,9 +66,6 @@ impl AppCommand {
         }
     }
 }
-
-
-
 
 impl Config {
     pub fn new() -> Result<Arc<Config>, String>{
@@ -162,8 +155,6 @@ impl ArguementParser<'_> {
 
 
         let replacement = String::from(self.matches.value_of("REPLACEMENT").unwrap_or_default()); 
-        //l0et replacement: String =  "".to_string(); 
-
         let limit = self.matches
             .value_of("replace-limit")
             .unwrap_or_default()
