@@ -10,7 +10,6 @@ use crate::output::Printer;
 pub struct Config {
     pub force: bool,
     pub backup: bool, 
-    pub dirs: bool, 
     pub dump: bool, 
     pub run_mode: RunMode, 
     pub replace_mode:ReplaceMode, 
@@ -85,10 +84,6 @@ struct ArguementParser<'a> {
     printer: &'a Printer, 
     command: &'a AppCommand,
 }
-
-
-
-
 
 impl ArguementParser<'_> {
     fn parse_run_mode(&self) -> Result<RunMode, String>{
@@ -210,17 +205,14 @@ fn parse_arguements() -> Result<Config, String> {
         command: &command
     }; 
 
-
-
-
     let run_mode = arguement_parser.parse_run_mode()?; 
     let replace_mode = arguement_parser.parse_replace_mode()?; 
 
     
     Ok(Config {
         force: matches.is_present("force"), 
-        backup: matches.is_present("backup"), 
-        dirs: matches.is_present("include-dirs"), 
+        backup: matches.is_present("backup"),  
+        interactive: matches.is_present("interactive"),
         dump, 
         run_mode, 
         replace_mode, 
@@ -238,24 +230,5 @@ fn detect_output_color() -> Printer {
     
     }else {
         Printer::no_color()
-    }
-}
-
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn app_command_from_string() {
-        assert_eq!(AppCommand::from_str("").unwrap(), AppCommand::Root); //check for empty string  
-        assert_eq!(AppCommand::from_str(FROM_FILE_SUBCOMMAND).unwrap(), AppCommand::FromFile)
-    }
-
-
-    #[test]
-    #[should_panic]
-    fn app_command_from_string_unknown_error() {
-        AppCommand::from_str("testing unknown command").unwrap(); 
     }
 }

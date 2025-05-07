@@ -13,10 +13,10 @@ pub enum Editor {
 
 
 #[derive(Serialize, Deserialize)]
-struct RenameOperation {
-  old_name: String, 
-  new_name: String,
-  status: bool
+pub struct RenameOperation {
+  pub old_name: String,  
+  pub new_name: String,
+  pub status: bool
 }
 
 pub struct InterativeMode {
@@ -99,8 +99,8 @@ impl InterativeMode {
   }
 
 
-  pub fn apply_rename_operations(&self, operations: Vec<RenameOperation>) -> Result<()> {
-      for op in operations {
+  pub fn apply_rename_operations(&self, operations: Result<Vec<RenameOperation>>) -> Result<()> {
+      for op in operations? {
         if op.status {
           fs::rename(&op.old_name, op.new_name)?;
         }

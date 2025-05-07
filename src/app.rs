@@ -7,10 +7,6 @@ use clap::{SubCommand, Arg, AppSettings, App};
 pub const FROM_FILE_SUBCOMMAND: &str = "from-file"; 
 pub const TO_ASCII_SUBCOMMMAND: &str = "to-ascii"; 
 
-
-//create the application here
-
-
 pub fn create_app<'a>() -> App<'a,'a> {
     let common_args = [
         Arg::with_name("dry-run")
@@ -43,6 +39,11 @@ pub fn create_app<'a>() -> App<'a,'a> {
             .long("no-dump")
             .help("Do not dump operations into a file")
             .conflicts_with("dump"),
+
+        Arg::with_name("interactive")
+            .long("interactive")
+            .short("i")
+            .help("Rename file(s) interactively using an Editor")
     ];
 
 

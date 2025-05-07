@@ -3,7 +3,8 @@ use std::result;
 pub type Result<T> = result::Result<T, Error>; 
 
 //error type here
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum  ErrorKind {
     CreateBackup, 
     CreateFile, 
@@ -17,7 +18,7 @@ pub enum  ErrorKind {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Error {
     pub kind: ErrorKind, 
     pub value: Option<String>
@@ -25,18 +26,17 @@ pub struct Error {
 
 
 impl Error  {
-    pub fn description(&self) -> &str {
-        use self::ErrorKind::*; 
+    pub fn description(&self) -> &str { 
         match self.kind {
-            CreateBackup => "Cannot create a backup of", 
-            CreateFile => "Cannot create file", 
-            CreateSymlink => "Cannot create symlink", 
-            ExistingPath => "Conflict with existing path", 
-            JsonParse => "Cannot parse JSON  file",
-            ReadFile => "Cannot open/read file",
-            Rename => "Cannot Rename", 
-            SameFilename => "Files will have the same name", 
-            SolveOrder => "Cannot solve sorting problem"
+            ErrorKind::CreateBackup => "Cannot create a backup of", 
+            ErrorKind::CreateFile => "Cannot create file", 
+            ErrorKind::CreateSymlink => "Cannot create symlink", 
+            ErrorKind::ExistingPath => "Conflict with existing path", 
+            ErrorKind::JsonParse => "Cannot parse JSON  file",
+            ErrorKind::ReadFile => "Cannot open/read file",
+            ErrorKind::Rename => "Cannot Rename", 
+            ErrorKind::SameFilename => "Files will have the same name", 
+            ErrorKind::SolveOrder => "Cannot solve sorting problem"
         }
     }
 }

@@ -2,8 +2,8 @@
 use any_ascii::any_ascii;
 use crate::config::{Config, ReplaceMode, RunMode};
 use crate::dumpfile::{ Operation, Operations, self};
-use crate::error::*;
-use crate::fileutils::{create_backup, get_paths, };
+use crate::error::{ Result, Error, ErrorKind};
+use crate::fileutils::{create_backup, get_paths };
 use crate::interactive::InterativeMode;
 use crate::solver;
 use std::collections::HashMap;
@@ -12,13 +12,12 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 
-
 pub type RenameMap = HashMap<PathBuf, PathBuf>; 
 
 
 pub struct Renamer {
     config: Arc<Config>, 
-    interactive: Option<InterativeMode>,
+    pub interactive: Option<InterativeMode>,
 }
 
 impl Renamer {
@@ -26,10 +25,10 @@ impl Renamer {
         Ok(Renamer {
             config: config.clone(), 
             interactive: None, //initialize interactive mode as None
-            })
+        })
     }
 
-/** process user input accordingly */
+    /** process user input accordingly */
     pub fn process (&self) -> Result<Operations>{
         let operations = match self.config.run_mode {
             RunMode::Simple(_) | RunMode::Recursive { .. } => {
@@ -76,35 +75,47 @@ impl Renamer {
     }
 
 
-    //replace file name matches the given config
-    fn replace_match(&self, path: &Path) -> PathBuf {
-        let file_name = path.file_name().unwrap().to_str().unwrap(); 
-        //replace match
-        let parent = path.parent(); 
-        let target_name =  match &self.config.replace_mode {
+    /** Replace file name matches the given config */
+    fn replace_match(&self, path: &Path) -> Result<PathBuf> {
+        let file_name = path.file_name().ok_or_else(|| Error {
+            kind: ErrorKind::ReadFile, 
+            value: Some("No file name found".to_string()),
+        })?;
+
+        let target_name = match &self.config.replace_mode {
             ReplaceMode::RegExp { 
                 expression, 
                 replacement, 
-                limit 
-            } => expression.replacen(file_name, *limit, &replacement[..]).to_string(), 
-                ReplaceMode::ToASCII => any_ascii(file_name), //translate string -> ascii
-        }; 
+                limit,
+            } => {
 
-        match parent {
-            None => PathBuf::from(target_name), 
-            Some(path) => path.join(Path::new(&target_name))
-        }
+                let file_name_str = file_name.to_str().ok_or_else(|| Error {
+                    kind: ErrorKind::ReadFile, 
+                    value: Some("File name is not a valid UTF-8 string".to_string()),
+                })?;
+
+                expression.replacen(file_name_str, *limit, replacement.as_str()).into_owned()
+            }
+            ReplaceMode::ToASCII => {
+                let file_name_str = file_name.to_str().ok_or_else(|| Error {
+                    kind: ErrorKind::ReadFile,
+                    value: Some("File name is not a valid UTF-8 string".to_string()),
+                })?;
+                any_ascii(file_name_str).to_string()
+            }   
+        };
+
+        Ok(match path.parent() {
+            None => PathBuf::from(target_name),
+            Some(parent) => parent.join(Path::new(&target_name)),
+        })
     }
 
 
-    /*
-        Rename file if it exist using this medthod
-    */
+    /** Rename file if it exist using this medthod */
     fn rename(&self, operation: &Operation) -> Result<()> {
         let printer = &self.config.printer; 
         let colors = &printer.colors; 
-
-
 
         if self.config.force {
             //create backup before renaming with force
@@ -159,14 +170,13 @@ impl Renamer {
         let mut error_string = String::new(); 
 
         for path in paths {
-            let target = self.replace_match(path); 
+            let target = self.replace_match(path)?; 
 
             if target != *path {
                 if let Some(old_path) = rename_map.insert(target.clone(), path.clone()) {
                     //target cannot be duplicated be any reason
                     error_string.push_str(
-                        &colors.
-                        error.paint(format!(
+                        &colors.error.paint(format!(
                             "\n{0}->{2}\n{1}->{2}\n",
                             old_path.display(), 
                             path.display(), 
@@ -198,15 +208,4 @@ impl Renamer {
 
     }
 
-    // pub fn process_interactive(&self, operations: Vec<PathBuf, PathBuf>) -> Result<()> {
-    //     if self.config.interactive {
-    //         let filtered_operations =self.interactive.process_operations(operations)?;
-    //         self.batch_rename(operations)?;
-    //     }
-    //     else {
-    //         self.batch_rename(operations)?; 
-    //     }
-
-    //     Ok(())
-    // }
 }

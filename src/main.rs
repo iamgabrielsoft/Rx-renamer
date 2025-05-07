@@ -1,4 +1,7 @@
+use config::Config;
+use interactive::RenameOperation;
 use renamer::Renamer;
+use error::Result;
 
 extern crate ansi_term;
 extern crate any_ascii;
@@ -15,7 +18,6 @@ extern crate walkdir;
 
 #[macro_use]
 extern crate clap;
-
 extern crate serde_derive;
 
 
@@ -32,36 +34,48 @@ mod interactive;
 
 
 
-fn main(){
-    let config = match config::Config::new() {
-        Ok(config) => config,
-        Err(err) => {
-            eprintln!("{}", err); 
-            std::process::exit(1)
-        }
+fn main() -> Result<()> { 
+    let config = Config::new().map_err(|e| error::Error {
+        kind: error::ErrorKind::ReadFile,
+        value: Some(e),
+    })?;
+
+    let renamer = if config.interactive {
+        Renamer::new_with_interactive_mode(&config)
+    }else {
+        Renamer::new(&config)?
     };
 
-    let renamer = match Renamer::new(&config) {
-        Ok(renamer) => renamer, 
-        Err(err) => {
-            config.printer.print_error(&err); 
-            std::process::exit(1)
+
+    let operations = renamer.process()?;
+
+    if config.interactive {
+        if let Some(interactive) = &renamer.interactive {
+            let rename_operations = operations
+                .into_iter()
+                .map(|op| RenameOperation {
+                    old_name: op.source.to_string_lossy().to_string(), 
+                    new_name: op.target.to_string_lossy().to_string(),
+                    status: false,
+                })
+                .collect();
+
+            let modified_operation = interactive.process_operations(rename_operations);
+
+            interactive.apply_rename_operations(modified_operation);
         }
-    }; 
-
-    //Generate operations
-    let operations = match renamer.process() {
-        Ok(operation) => operation, 
-        Err(err) => {
-            config.printer.print_error(&err); 
-            std::process::exit(1)
+    }
+    else {
+        if config.force {
+            renamer.batch_rename(operations)?;
         }
-    }; 
+        else {
+            for op in operations {
+                config.printer.print_operation(&op.source, &op.target);
+            }
+        }
+    }
 
-
-    //Batch rename operations
-    if let Err(err) = renamer.batch_rename(operations) {
-        config.printer.print_error(&err); 
-        std::process::exit(1); 
-    };
+    println!("File(s) renamed successfully!");
+    Ok(())
 } 

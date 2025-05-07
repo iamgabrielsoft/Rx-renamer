@@ -121,6 +121,7 @@ pub fn is_same_file(source: &Path, target:&Path) -> bool {
 
 
 
+
 pub fn create_symlink(source: &Path, symlink_file: &Path) -> Result<()> {
      #[cfg(windows)]
     match ::std::os::windows::fs::symlink_file(source, symlink_file) {
@@ -144,7 +145,7 @@ pub fn create_symlink(source: &Path, symlink_file: &Path) -> Result<()> {
 }
 
 
-/* cleanup the paths created  */
+#[warn(unused_variables)]
 pub fn cleanup_paths(paths: &mut PathList, keep_dirs: bool) {
     paths.retain(|path| {
         if path.symlink_metadata().is_err() {
@@ -167,7 +168,6 @@ pub fn cleanup_paths(paths: &mut PathList, keep_dirs: bool) {
 
 
 
-//for test 
 #[cfg(test)]
 mod test {
     use super::*; 
