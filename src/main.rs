@@ -1,7 +1,7 @@
+
 use config::Config;
 use interactive::RenameOperation;
 use renamer::Renamer;
-use error::Result;
 
 extern crate ansi_term;
 extern crate any_ascii;
@@ -34,20 +34,35 @@ mod interactive;
 
 
 
-fn main() -> Result<()> { 
-    let config = Config::new().map_err(|e| error::Error {
-        kind: error::ErrorKind::ReadFile,
-        value: Some(e),
-    })?;
+fn main() { 
+    let config = match Config::new() {
+        Ok(config) => config, 
+        Err(err) => {
+            eprintln!("{}", err); 
+            std::process::exit(1);
+        }
+    };
 
     let renamer = if config.interactive {
         Renamer::new_with_interactive_mode(&config)
     }else {
-        Renamer::new(&config)?
+        match Renamer::new(&config) {
+            Ok(renamer) => renamer, 
+            Err(err) => {
+                config.printer.print_error(&err);
+                std::process::exit(1);
+            }
+        }
     };
 
 
-    let operations = renamer.process()?;
+    let operations = match renamer.process() {
+        Ok(operations) => operations, 
+        Err(err) => {
+            config.printer.print_error(&err);
+            std::process::exit(1);
+        }
+    };
 
     if config.interactive {
         if let Some(interactive) = &renamer.interactive {
@@ -60,14 +75,35 @@ fn main() -> Result<()> {
                 })
                 .collect();
 
-            let modified_operation = interactive.process_operations(rename_operations);
+            match interactive.process_operations(rename_operations) {
+                Ok(modified_operations) => {
+                    if let Err(err) = interactive.apply_rename_operations(modified_operations) {
+                        let custom_error = error::Error {
+                            kind: error::ErrorKind::Rename, 
+                            value: Some(err.to_string()),
+                        };
 
-            interactive.apply_rename_operations(modified_operation);
+                        config.printer.print_error(&custom_error);
+                        std::process::exit(1);
+                    }
+                }
+                Err(err) => {
+                    let custom_error = error::Error {
+                        kind: error::ErrorKind::Rename, 
+                        value: Some(err.to_string()),
+                    };
+                    config.printer.print_error(&custom_error);
+                    std::process::exit(1); 
+                }
+            }
         }
     }
     else {
         if config.force {
-            renamer.batch_rename(operations)?;
+            if let Err(err) = renamer.batch_rename(operations) {
+                config.printer.print_error(&err);
+                std::process::exit(1);
+            }
         }
         else {
             for op in operations {
@@ -77,5 +113,5 @@ fn main() -> Result<()> {
     }
 
     println!("File(s) renamed successfully!");
-    Ok(())
+
 } 

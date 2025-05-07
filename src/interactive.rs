@@ -99,8 +99,8 @@ impl InterativeMode {
   }
 
 
-  pub fn apply_rename_operations(&self, operations: Result<Vec<RenameOperation>>) -> Result<()> {
-      for op in operations? {
+  pub fn apply_rename_operations(&self, operations: Vec<RenameOperation>) -> Result<()> {
+      for op in operations {
         if op.status {
           fs::rename(&op.old_name, op.new_name)?;
         }
